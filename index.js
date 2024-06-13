@@ -1,8 +1,6 @@
-// TODO: margin 반영하기
-
 class MasonryGrid {
   constructor({
-    containerId,
+    container,
     columnLength,
     rowGap,
     columnGap,
@@ -10,7 +8,7 @@ class MasonryGrid {
     maxColumnWidth,
     fullScreen,
   }) {
-    this.container = document.getElementById(containerId);
+    this.container = document.getElementById(container.id);
     this.items = Array.from(this.container.querySelectorAll(".grid-item"));
     this.defaultColumnLength = columnLength;
     this.columnLength = columnLength;
@@ -19,6 +17,8 @@ class MasonryGrid {
     this.minColumnWidth = minColumnWidth;
     this.maxColumnWidth = maxColumnWidth;
     this.fullScreen = fullScreen;
+    this.containerPadding = container.padding;
+    this.containerMargin = container.margin;
 
     if (!this.container || this.items.length === 0) return;
 
@@ -26,32 +26,14 @@ class MasonryGrid {
     window.addEventListener("resize", this.init);
   }
 
-  getComputedStyleProperty(element, property) {
-    return parseFloat(
-      window.getComputedStyle(element, null).getPropertyValue(property)
-    );
-  }
-
   calculateColumnWidth() {
     const containerWidth = this.fullScreen
       ? window.innerWidth
       : this.container.offsetWidth;
-    const containerPaddingLeft = this.getComputedStyleProperty(
-      this.container,
-      "padding-left"
-    );
-    const containerPaddingRight = this.getComputedStyleProperty(
-      this.container,
-      "padding-right"
-    );
-    const containerMarginLeft = this.getComputedStyleProperty(
-      this.container,
-      "margin-left"
-    );
-    const containerMarginRight = this.getComputedStyleProperty(
-      this.container,
-      "margin-right"
-    );
+    const containerPaddingLeft = this.containerPadding;
+    const containerPaddingRight = this.containerPadding;
+    const containerMarginLeft = this.containerMargin;
+    const containerMarginRight = this.containerMargin;
     let columnWidth;
     this.columnLength = this.defaultColumnLength; // Reset column length to default
 
@@ -82,18 +64,11 @@ class MasonryGrid {
     return columnWidth;
   }
 
-  getItemPosition(index, columnWidth, containerPaddingTop, containerMarginTop) {
+  getItemPosition(index, columnWidth) {
     const isSameColumn = index % this.columnLength !== 0;
     const leftPos = isSameColumn
       ? this.items[index - 1].offsetLeft + columnWidth + this.columnGap
-      : this.getComputedStyleProperty(
-          this.items[index].parentElement,
-          "padding-left"
-        ) +
-        this.getComputedStyleProperty(
-          this.items[index].parentElement,
-          "margin-left"
-        );
+      : this.containerPadding + this.containerMargin;
 
     const prevItemIndex =
       index >= this.columnLength ? index - this.columnLength : -1;
@@ -102,7 +77,7 @@ class MasonryGrid {
         ? this.items[prevItemIndex].offsetTop +
           this.items[prevItemIndex].offsetHeight +
           this.rowGap
-        : containerPaddingTop + containerMarginTop;
+        : this.containerPadding;
 
     return { top: topPos, left: leftPos };
   }
@@ -113,31 +88,16 @@ class MasonryGrid {
       return itemBottom > max ? itemBottom : max;
     }, 0);
     this.container.style.height = `${
-      maxHeight +
-      this.getComputedStyleProperty(this.container, "padding-bottom") +
-      this.getComputedStyleProperty(this.container, "margin-bottom")
+      maxHeight + this.containerPadding + this.containerMargin
     }px`;
   }
 
   init = () => {
     // Bind the context of init method to the instance
-    const containerPaddingTop = this.getComputedStyleProperty(
-      this.container,
-      "padding-top"
-    );
-    const containerMarginTop = this.getComputedStyleProperty(
-      this.container,
-      "margin-top"
-    );
     const columnWidth = this.calculateColumnWidth();
 
     this.items.forEach((item, index) => {
-      const { top, left } = this.getItemPosition(
-        index,
-        columnWidth,
-        containerPaddingTop,
-        containerMarginTop
-      );
+      const { top, left } = this.getItemPosition(index, columnWidth);
       item.style.position = "absolute";
       item.style.width = `${columnWidth}px`;
       item.style.left = `${left}px`;
@@ -150,7 +110,11 @@ class MasonryGrid {
 
 document.addEventListener("DOMContentLoaded", () => {
   new MasonryGrid({
-    containerId: "masonryGrid",
+    container: {
+      id: "masonryGrid",
+      padding: 10,
+      margin: 20,
+    },
     columnLength: 3,
     rowGap: 5,
     columnGap: 10,
