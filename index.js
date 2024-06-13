@@ -27,25 +27,18 @@ class MasonryGrid {
   }
 
   calculateColumnWidth() {
-    const containerWidth = this.fullScreen
-      ? window.innerWidth
-      : this.container.offsetWidth;
-    const containerPaddingLeft = this.containerPadding;
-    const containerPaddingRight = this.containerPadding;
-    const containerMarginLeft = this.containerMargin;
-    const containerMarginRight = this.containerMargin;
+    const containerLRPadding = this.containerPadding * 2;
+    const containerLRMargin = this.containerMargin * 2;
+    const containerWidth =
+      window.innerWidth - containerLRPadding - containerLRMargin;
+
     let columnWidth;
     this.columnLength = this.defaultColumnLength; // Reset column length to default
 
     do {
-      const containerWidthInner =
-        containerWidth -
-        containerPaddingLeft -
-        containerPaddingRight -
-        containerMarginLeft -
-        containerMarginRight;
+      // TODO: Refactor this part, width에 추가적인 값이 들어가는 듯?
       columnWidth =
-        (containerWidthInner - (this.columnLength - 1) * this.columnGap) /
+        (containerWidth - (this.columnLength - 1) * this.columnGap) /
         this.columnLength;
       if (columnWidth < this.minColumnWidth) {
         this.columnLength--;
@@ -77,7 +70,7 @@ class MasonryGrid {
         ? this.items[prevItemIndex].offsetTop +
           this.items[prevItemIndex].offsetHeight +
           this.rowGap
-        : this.containerPadding;
+        : this.containerPadding + this.containerMargin;
 
     return { top: topPos, left: leftPos };
   }
@@ -87,9 +80,9 @@ class MasonryGrid {
       const itemBottom = item.offsetTop + item.offsetHeight;
       return itemBottom > max ? itemBottom : max;
     }, 0);
-    this.container.style.height = `${
-      maxHeight + this.containerPadding + this.containerMargin
-    }px`;
+    this.container.style.height = `${maxHeight}px`;
+    this.container.style.margin = `${this.containerMargin}px`;
+    this.container.style.padding = `${this.containerPadding}px`;
   }
 
   init = () => {
@@ -112,8 +105,8 @@ document.addEventListener("DOMContentLoaded", () => {
   new MasonryGrid({
     container: {
       id: "masonryGrid",
-      padding: 10,
-      margin: 20,
+      padding: 30,
+      margin: 30,
     },
     columnLength: 3,
     rowGap: 5,
